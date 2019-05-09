@@ -135,8 +135,8 @@ type Error struct {
 }
 
 //New create new error
-func New(err error, kind Kind, message string) Error {
-	return Error{
+func New(err error, kind Kind, message string) *Error {
+	return &Error{
 		err:     fmt.Sprintf("%v", err),
 		kind:    kind,
 		message: message,
