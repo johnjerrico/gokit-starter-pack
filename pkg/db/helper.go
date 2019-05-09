@@ -13,6 +13,16 @@ type Order struct {
 	Direction string
 }
 
+//Assign create assign operation without type formatting
+func Assign(field string, value string) string {
+	var buffer strings.Builder
+	buffer.WriteString(`"`)
+	buffer.WriteString(field)
+	buffer.WriteString(`"=`)
+	buffer.WriteString(value)
+	return buffer.String()
+}
+
 //AssignString create assign operation with string type value
 func AssignString(field string, value string) string {
 	var buffer strings.Builder
