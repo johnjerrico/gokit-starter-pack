@@ -40,9 +40,14 @@ func Extract(fields []string, prefix string) string {
 			builder.WriteString(prefix)
 			builder.WriteString(".")
 		}
-		builder.WriteString(`"`)
-		builder.WriteString(_field)
-		builder.WriteString(`"`)
+		if strings.Contains(_field, `"`) {
+			builder.WriteString(_field)
+		} else {
+			builder.WriteString(`"`)
+			builder.WriteString(_field)
+			builder.WriteString(`"`)
+		}
+
 	}
 	return builder.String()
 }
