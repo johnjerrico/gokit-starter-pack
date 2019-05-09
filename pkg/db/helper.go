@@ -13,7 +13,7 @@ type Order struct {
 	Direction string
 }
 
-//Assign create assign operation without type formatting
+//Assign create assign operation
 func Assign(field string, value string) string {
 	var buffer strings.Builder
 	buffer.WriteString(`"`)
@@ -23,26 +23,9 @@ func Assign(field string, value string) string {
 	return buffer.String()
 }
 
-//AssignString create assign operation with string type value
-func AssignString(field string, value string) string {
-	var buffer strings.Builder
-	buffer.WriteString(`"`)
-	buffer.WriteString(field)
-	buffer.WriteString(`"='`)
-	buffer.WriteString(value)
-	buffer.WriteString(`'`)
-	return buffer.String()
-}
-
-//AssignInt create assign operation with int type value
-func AssignInt(field string, value int) string {
-	var buffer strings.Builder
-	buffer.WriteString(`"`)
-	buffer.WriteString(field)
-	buffer.WriteString(`"=`)
-	buffer.WriteString(fmt.Sprintf("%d", value))
-	buffer.WriteString(` `)
-	return buffer.String()
+//Equal create equal operation
+func Equal(field string, value string) string {
+	return Assign(field, value)
 }
 
 //Extract convert array of fields into string of fields
