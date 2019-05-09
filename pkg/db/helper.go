@@ -13,6 +13,28 @@ type Order struct {
 	Direction string
 }
 
+//AssignString create assign operation with string type value
+func AssignString(field string, value string) string {
+	var buffer strings.Builder
+	buffer.WriteString(`"`)
+	buffer.WriteString(field)
+	buffer.WriteString(`"='`)
+	buffer.WriteString(value)
+	buffer.WriteString(`'`)
+	return buffer.String()
+}
+
+//AssignInt create assign operation with int type value
+func AssignInt(field string, value int) string {
+	var buffer strings.Builder
+	buffer.WriteString(`"`)
+	buffer.WriteString(field)
+	buffer.WriteString(`"=`)
+	buffer.WriteString(fmt.Sprintf("%d", value))
+	buffer.WriteString(` `)
+	return buffer.String()
+}
+
 //Extract convert array of fields into string of fields
 func Extract(fields []string, prefix string) string {
 	var builder strings.Builder
