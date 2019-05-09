@@ -1,5 +1,7 @@
 package error
 
+import "fmt"
+
 //Kind ...
 type Kind = int
 
@@ -130,6 +132,15 @@ type Error struct {
 	err     string
 	kind    Kind
 	message string
+}
+
+//New create new error
+func New(err error, kind Kind, message string) Error {
+	return Error{
+		err:     fmt.Sprintf("%v", err),
+		kind:    kind,
+		message: message,
+	}
 }
 
 func (d *Error) Error() string {
