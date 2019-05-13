@@ -66,6 +66,22 @@ type IRunInTransaction interface {
 	UpdateQueryable(queryable QueryableContext)
 }
 
+//RunAlwaysRollbackTransaction runs function with the transaction context without applying the context and rollback
+func RunAlwaysRollbackTransaction(db *sqlx.DB, f func(tx *sqlx.Tx) error) error {
+
+	_tx := db.MustBegin()
+
+	_err := f(_tx)
+
+	_tx.Rollback()
+
+	if _err != nil {
+		return _err
+	}
+
+	return nil
+}
+
 //RunInTransactionWithDB runs function with the transaction context without applying the context
 func RunInTransactionWithDB(db *sqlx.DB, f func(tx *sqlx.Tx) error) error {
 
