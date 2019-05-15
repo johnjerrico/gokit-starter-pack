@@ -114,5 +114,8 @@ func RunInTransaction(db *sqlx.DB, obj IRunInTransaction, f func(tx *sqlx.Tx) er
 	if _err != nil {
 		return fmt.Errorf("error when committing transaction: %v", _err)
 	}
+
+	obj.UpdateQueryable(NewQueryableContext(db))
+
 	return nil
 }
