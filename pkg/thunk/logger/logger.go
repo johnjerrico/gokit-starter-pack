@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/go-kit/kit/log"
@@ -50,6 +51,13 @@ func (m Logger) Instrumentation(
 	return func(ctx context.Context, request interface{}) (resp interface{}, err error) {
 		defer func(begin time.Time) {
 			m.requestCount.With(method, action).Add(1)
+			if err != nil {
+				m.requestCount.With(method, fmt.Sprintf("%s_FAILED", action)).Add(1)
+				m.requestLatency.With(method, fmt.Sprintf("%s_FAILED", action)).Observe(time.Since(begin).Seconds())
+			} else {
+				m.requestCount.With(method, fmt.Sprintf("%s_SUCCESS", action)).Add(1)
+				m.requestLatency.With(method, fmt.Sprintf("%s_SUCCESS", action)).Observe(time.Since(begin).Seconds())
+			}
 			m.requestLatency.With(method, action).Observe(time.Since(begin).Seconds())
 		}(time.Now())
 		return f(ctx, request)
