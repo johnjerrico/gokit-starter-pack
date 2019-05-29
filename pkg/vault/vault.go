@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"reflect"
 
 	"github.com/hashicorp/vault/api"
 	rError "github.com/johnjerrico/gokit-starter-pack/pkg/error"
@@ -21,21 +22,114 @@ type Response struct {
 	Data map[string]interface{}
 }
 
-// Init ...
-func (v *Vault) Init(addr string, token string) {
-	v.Client, _ = api.NewClient(nil)
-	v.SetAddress(addr)
-	v.SetToken(token)
+// New ...
+func New(addr, token string) (*Vault, error) {
+	c, err := api.NewClient(nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	c.SetAddress(addr)
+	c.SetToken(token)
+
+	return &Vault{c}, nil
 }
 
-func (v *Vault) Write(path string, data map[string]interface{}) error {
+// GetEnvOrDefaultConfig ...
+func (c *Vault) GetEnvOrDefaultConfig(def interface{}, path string) (map[string]string, error) {
 	var err error
+	res := make(map[string]string)
 
-	if v.Client == nil {
+	if c == nil {
+		return nil, rError.New(err, rError.Enum.INTERNALSERVERERROR, "client_has_not_been_initiated")
+	}
+
+	// Parsing interface to map
+	s := reflect.ValueOf(def).Elem()
+	typeOfT := s.Type()
+
+	for i := 0; i < s.NumField(); i++ {
+		f := s.Field(i)
+		res[typeOfT.Field(i).Name] = f.Interface().(string)
+	}
+
+	// Read Config from config/global vault
+	kv, err := c.Logical().Read("config/global")
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k := range res {
+		if kv.Data[k] != nil {
+			res[k] = kv.Data[k].(string)
+		}
+	}
+
+	// Read Config from config/{path} vault
+	kv, err = c.Logical().Read("config/" + path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k := range res {
+		if kv.Data[k] != nil {
+			res[k] = kv.Data[k].(string)
+		}
+	}
+
+	return res, nil
+}
+
+// WriteEncrypted ...
+func (c *Vault) WriteEncrypted(transitkey, path, key, value string) error {
+	var err error
+	var response Response
+
+	if c == nil {
 		return rError.New(err, rError.Enum.INTERNALSERVERERROR, "client_has_not_been_initiated")
 	}
 
-	_, err = v.Logical().Write(path, data)
+	reqBody, _ := json.Marshal(map[string]string{
+		"plaintext": base64.StdEncoding.EncodeToString([]byte(value)),
+	})
+
+	uri := fmt.Sprintf("/v1/transit/encrypt/%v", transitkey)
+
+	req := c.NewRequest("POST", uri)
+	req.Body = bytes.NewBuffer(reqBody)
+
+	res, err := c.RawRequest(req)
+
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		return err
+	}
+
+	// Pass a pointer of type Response and Go'll do the rest
+	err = json.Unmarshal(body, &response)
+
+	if err != nil {
+		return err
+	}
+
+	// Get Ciphertext from Response
+	ciphertext := response.Data["ciphertext"].(string)
+
+	data := map[string]interface{}{
+		key: ciphertext,
+	}
+
+	_, err = c.Logical().Write(path, data)
 
 	if err != nil {
 		return err
@@ -44,103 +138,31 @@ func (v *Vault) Write(path string, data map[string]interface{}) error {
 	return nil
 }
 
-func (v *Vault) Read(path string) (map[string]interface{}, error) {
-	var err error
-
-	if v.Client == nil {
-		return nil, rError.New(err, rError.Enum.INTERNALSERVERERROR, "client_has_not_been_initiated")
-	}
-
-	kv, err := v.Logical().Read(path)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return kv.Data, err
-}
-
-// List ...
-func (v *Vault) List(path string) (map[string]interface{}, error) {
-	var err error
-
-	if v.Client == nil {
-		return nil, rError.New(err, rError.Enum.INTERNALSERVERERROR, "client_has_not_been_initiated")
-	}
-
-	kv, err := v.Logical().List(path)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return kv.Data, err
-}
-
-// Encrypt ...
-func (v *Vault) Encrypt(key, data string) (string, error) {
+// ReadEncrypted ...
+func (c *Vault) ReadEncrypted(transitkey, path, key string) (string, error) {
 	var err error
 	var resp Response
 
-	if v.Client == nil {
+	if c == nil {
 		return "", rError.New(err, rError.Enum.INTERNALSERVERERROR, "client_has_not_been_initiated")
 	}
 
-	reqBody, _ := json.Marshal(map[string]string{
-		"plaintext": base64.StdEncoding.EncodeToString([]byte(data)),
-	})
-
-	path := fmt.Sprintf("/v1/transit/encrypt/%v", key)
-
-	req := v.NewRequest("POST", path)
-	req.Body = bytes.NewBuffer(reqBody)
-
-	res, err := v.RawRequest(req)
+	data, err := c.Logical().Read(path)
 
 	if err != nil {
 		return "", err
-	}
-
-	defer res.Body.Close()
-
-	body, err := ioutil.ReadAll(res.Body)
-
-	if err != nil {
-		return "", err
-	}
-
-	// Pass a pointer of type Response and Go'll do the rest
-	err = json.Unmarshal(body, &resp)
-
-	if err != nil {
-		return "", err
-	}
-
-	// Get Ciphertext from Response
-	ct := resp.Data["ciphertext"].(string)
-
-	return ct, err
-}
-
-// Decrypt ...
-func (v *Vault) Decrypt(key, data string) (string, error) {
-	var err error
-	var resp Response
-
-	if v.Client == nil {
-		return "", rError.New(err, rError.Enum.INTERNALSERVERERROR, "client_has_not_been_initiated")
 	}
 
 	reqBody, _ := json.Marshal(map[string]string{
-		"ciphertext": data,
+		"ciphertext": data.Data[key].(string),
 	})
 
-	path := fmt.Sprintf("/v1/transit/decrypt/%v", key)
+	uri := fmt.Sprintf("/v1/transit/decrypt/%v", transitkey)
 
-	req := v.NewRequest("POST", path)
+	req := c.NewRequest("POST", uri)
 	req.Body = bytes.NewBuffer(reqBody)
 
-	res, err := v.RawRequest(req)
+	res, err := c.RawRequest(req)
 
 	if err != nil {
 		return "", err
@@ -162,13 +184,13 @@ func (v *Vault) Decrypt(key, data string) (string, error) {
 	}
 
 	// Get Plaintext from Response
-	ptb, err := base64.StdEncoding.DecodeString(resp.Data["plaintext"].(string))
+	plaintextByte, err := base64.StdEncoding.DecodeString(resp.Data["plaintext"].(string))
 
-	pt := string(ptb)
+	plaintext := string(plaintextByte)
 
 	if err != nil {
 		return "", err
 	}
 
-	return pt, err
+	return plaintext, err
 }
