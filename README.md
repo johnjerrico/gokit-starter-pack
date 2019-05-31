@@ -17,6 +17,7 @@ Add library event for wrapping publish and subscribe nats
 Library for publishing event to nats (begin and commit) as a middleware in transport
 
 #### Example
+
 ```
 //Create publisher
 eventPublisher := event.NewPublisher("nats_connection", "logger")
@@ -32,15 +33,18 @@ eventPublisher.Store("domain", "model", "eventtype", "topic/subject",
     },
 )
 ```
+
 Description :
 
 **NewPublisher**
+
 | Param           | Description                            |
 |-----------------|:---------------------------------------|
 | nats_connection | nats connection type **stan.Conn**     |
 | logger          | logger for logging type from gokit log |
 
 **.Store**
+
 | Param         | Description                            |
 |---------------|:---------------------------------------|
 | domain        | Your domain ex: account, authorization |
@@ -55,6 +59,7 @@ Description :
 Library for subscribe event from nats.
 
 #### Example
+
 ```
 assessmentApproveSub := event.NewSubscriber("nats_connection", "topic/subject", "qGroup", "durable_name", "startAt", "logger", func(msg *stan.Msg) {
     var tmp map[string]interface{}
@@ -64,9 +69,11 @@ assessmentApproveSub := event.NewSubscriber("nats_connection", "topic/subject", 
     logger.Log("nats", fmt.Sprintf("Incoming message from topic/subject with data %s", tmp))
 }).Subscribe()
 ```
+
 Description :
 
 **NewSubscriber**
+
 | Param               | Description                                                                               |
 |---------------------|:------------------------------------------------------------------------------------------|
 | nats_connection     | nats connection type **stan.Conn**                                                        |
