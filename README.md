@@ -3,8 +3,8 @@ starter pack for creating gokit project
 
 ##### Table of Contents  
 1. [Event Store](#event_store)  
-⋅⋅* [Publisher](#publisher)
-⋅⋅* [Subscriber](#subscriber)
+    * [Publisher](#publisher)
+    * [Subscriber](#subscriber)
 
 <a name="event_store"/>
 
