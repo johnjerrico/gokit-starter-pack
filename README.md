@@ -74,17 +74,17 @@ Description :
 
 **NewSubscriber**
 
-| Param               | Description                                                                               |
-|---------------------|:------------------------------------------------------------------------------------------|
-| nats_connection     | nats connection type **stan.Conn**                                                        |
-| topic/subject       | Topic/Subject for nats                                                                    |
-| qGroup              | Queue Group fill this with **your domain name**                                           |
-| durable_name        | Durable subscription ex :**authorization-sub**                                            |
-| startat             | Start at                                                                                  |
-|                     | (avaliable option :                                                                       |
-|                     | all,                                                                                      |
-|                     | seqno ex:**sqno:100**,                                                                    |
-|                     | time ex:**time:1559291755**,                                                              |
-|                     | since (for more information: https://golang.org/pkg/time/#ParseDuration)) ex:**since|2h** |
-| logger              | logger for logging type from gokit log                                                    |
-| func(msg *stan.Msg) | Handler incoming message                                                                  |
+| Param               | Description                                                                                      |
+|---------------------|:-------------------------------------------------------------------------------------------------|
+| nats_connection     | nats connection type **stan.Conn**                                                               |
+| topic/subject       | Topic/Subject for nats                                                                           |
+| qGroup              | Queue Group fill this with **your domain name**                                                  |
+| durable_name        | Durable subscription ex :**authorization-sub**                                                   |
+| startat             | Start at                                                                                         |
+|                     | (avaliable option :                                                                              |
+|                     | all,                                                                                             |
+|                     | seqno ex:**sqno:100**,                                                                           |
+|                     | time ex:**time:1559291755**,                                                                     |
+|                     | since (click [here](https://golang.org/pkg/time/#ParseDuration) for information) ex:**since|2h** |
+| logger              | logger for logging type from gokit log                                                           |
+| func(msg *stan.Msg) | Handler incoming message                                                                         |
