@@ -85,6 +85,6 @@ Description :
 |                     | all,                                                                                             |
 |                     | seqno ex:**sqno:100**,                                                                           |
 |                     | time ex:**time:1559291755**,                                                                     |
-|                     | since (click [here](https://golang.org/pkg/time/#ParseDuration) for information) ex:**since|2h** |
+|                     | since (click [here](https://golang.org/pkg/time/#ParseDuration) for information) ex:**since:2h** |
 | logger              | logger for logging type from gokit log                                                           |
 | func(msg *stan.Msg) | Handler incoming message                                                                         |
