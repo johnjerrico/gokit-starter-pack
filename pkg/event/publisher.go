@@ -84,7 +84,13 @@ func (p *Publisher) Store(domain, model, eventType, subject string, f endpoint.E
 				resultBundle["model"] = model
 				resultBundle["status"] = "error"
 				resultBundle["event_type"] = eventType
-				resultBundle["data"] = errResponse
+				resultBundle["data"] = errResponse.Error()
+
+				dataBundle, err := json.Marshal(resultBundle)
+				if err != nil {
+					p.logger.Log("error_publish_event_error", err)
+				}
+				p.publisher.Publish(subject, dataBundle)
 
 				p.logger.Log("nats", "Published message on channel: "+subject)
 				p.logger.Log("nats", fmt.Sprintf("data : %s", resultBundle))
