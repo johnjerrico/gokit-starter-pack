@@ -76,7 +76,19 @@ func (p *Publisher) Store(domain, model, eventType, subject string, f endpoint.E
 				}
 				p.publisher.Publish(subject, dataBundle)
 				p.logger.Log("nats", "Published message on channel: "+subject)
-				p.logger.Log("nats", fmt.Sprintf("response after : %s", resultBundle))
+				p.logger.Log("nats", fmt.Sprintf("data : %s", resultBundle))
+			} else {
+				var resultBundle = make(map[string]interface{})
+
+				resultBundle["domain"] = domain
+				resultBundle["model"] = model
+				resultBundle["status"] = "error"
+				resultBundle["event_type"] = eventType
+				resultBundle["data"] = errResponse
+
+				p.logger.Log("nats", "Published message on channel: "+subject)
+				p.logger.Log("nats", fmt.Sprintf("data : %s", resultBundle))
+
 			}
 		}()
 
