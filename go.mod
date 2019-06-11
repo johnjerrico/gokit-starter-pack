@@ -3,6 +3,7 @@ module github.com/johnjerrico/gokit-starter-pack
 require (
 	github.com/go-kit/kit v0.8.0
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
+	github.com/go-redis/redis v6.15.2+incompatible
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/hashicorp/raft v1.1.0 // indirect
 	github.com/hashicorp/vault/api v1.0.2
@@ -16,6 +17,8 @@ require (
 	github.com/nats-io/nkeys v0.0.2 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nats-io/stan.go v0.4.5
+	github.com/onsi/ginkgo v1.8.0 // indirect
+	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/prometheus/procfs v0.0.1 // indirect
 	go.etcd.io/bbolt v1.3.2 // indirect
 )
