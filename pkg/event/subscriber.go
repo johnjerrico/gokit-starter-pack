@@ -67,7 +67,7 @@ func (s *Subscriber) Subscribe() *stan.Subscription {
 		}
 		startOpt = stan.StartAtSequence(intSeq)
 	}
-	sub, err := s.conn.QueueSubscribe(fmt.Sprintf("%s.commit", s.subject), s.queueGroup, s.handler, stan.DurableName(s.durable), startOpt)
+	sub, err := s.conn.QueueSubscribe(s.subject, s.queueGroup, s.handler, stan.DurableName(s.durable), startOpt)
 	if err != nil {
 		s.logger.Log("nats", fmt.Sprintf("Error when subscribing topic %s", s.subject))
 		return nil

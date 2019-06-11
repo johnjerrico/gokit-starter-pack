@@ -40,17 +40,15 @@ func (p *Publisher) Store(domain, model, eventType, subject string, f endpoint.E
 
 		requestBundle["domain"] = domain
 		requestBundle["model"] = model
+		requestBundle["status"] = "begin"
 		requestBundle["event_type"] = eventType
 		requestBundle["data"] = requestData
-
-		subjectNew := fmt.Sprintf("%s.%s", subject, "begin")
-
 		dataBundle, err := json.Marshal(requestBundle)
 		if err != nil {
 			return nil, err
 		}
-		p.publisher.Publish(subjectNew, dataBundle)
-		p.logger.Log("nats", "Published message on channel: "+subjectNew)
+		p.publisher.Publish(subject, dataBundle)
+		p.logger.Log("nats", "Published message on channel: "+subject)
 		p.logger.Log("nats", fmt.Sprintf("data : %s", requestBundle))
 
 		defer func() {
@@ -68,6 +66,7 @@ func (p *Publisher) Store(domain, model, eventType, subject string, f endpoint.E
 
 				resultBundle["domain"] = domain
 				resultBundle["model"] = model
+				resultBundle["status"] = "commit"
 				resultBundle["event_type"] = eventType
 				resultBundle["data"] = resultData
 
@@ -75,9 +74,8 @@ func (p *Publisher) Store(domain, model, eventType, subject string, f endpoint.E
 				if err != nil {
 					p.logger.Log("error_publish_commit", err)
 				}
-				subjectNew := fmt.Sprintf("%s.%s", subject, "commit")
-				p.publisher.Publish(subjectNew, dataBundle)
-				p.logger.Log("nats", "Published message on channel: "+subjectNew)
+				p.publisher.Publish(subject, dataBundle)
+				p.logger.Log("nats", "Published message on channel: "+subject)
 				p.logger.Log("nats", fmt.Sprintf("response after : %s", resultBundle))
 			}
 		}()
