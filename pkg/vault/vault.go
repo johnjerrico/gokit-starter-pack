@@ -96,12 +96,12 @@ func (c *Vault) GetEnvOrDefaultConfig(path string, def interface{}) (map[string]
 }
 
 // WriteEncrypted ...
-func (c *Vault) WriteEncrypted(transitkey, path, key, value string) error {
+func (c *Vault) WriteEncrypted(transitkey, path, key, value string) (string, error) {
 	var err error
 	var response Response
 
 	if c == nil {
-		return rError.New(err, rError.Enum.INTERNALSERVERERROR, "client_has_not_been_initiated")
+		return "", rError.New(err, rError.Enum.INTERNALSERVERERROR, "client_has_not_been_initiated")
 	}
 
 	reqBody, _ := json.Marshal(map[string]string{
@@ -116,7 +116,7 @@ func (c *Vault) WriteEncrypted(transitkey, path, key, value string) error {
 	res, err := c.RawRequest(req)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	defer res.Body.Close()
@@ -124,14 +124,14 @@ func (c *Vault) WriteEncrypted(transitkey, path, key, value string) error {
 	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// Pass a pointer of type Response and Go'll do the rest
 	err = json.Unmarshal(body, &response)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// Get Ciphertext from Response
@@ -144,10 +144,10 @@ func (c *Vault) WriteEncrypted(transitkey, path, key, value string) error {
 	_, err = c.Logical().Write(path, data)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return ciphertext, nil
 }
 
 // ReadEncrypted ...
