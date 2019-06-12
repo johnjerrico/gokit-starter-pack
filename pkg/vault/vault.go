@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"reflect"
 
 	"github.com/hashicorp/vault/api"
@@ -22,13 +23,24 @@ type Response struct {
 	Data map[string]interface{}
 }
 
+func getEnvOrDefault(env string, defaultVal string) string {
+	e := os.Getenv(env)
+	if e == "" {
+		return defaultVal
+	}
+	return e
+}
+
 // New ...
-func New(addr, token string) (*Vault, error) {
+func New() (*Vault, error) {
 	c, err := api.NewClient(nil)
 
 	if err != nil {
 		return nil, err
 	}
+
+	addr := getEnvOrDefault("VAULT_ADDR", "http://127.0.0.1:8200")
+	token := getEnvOrDefault("VAULT_TOKEN", "")
 
 	c.SetAddress(addr)
 	c.SetToken(token)
@@ -37,7 +49,7 @@ func New(addr, token string) (*Vault, error) {
 }
 
 // GetEnvOrDefaultConfig ...
-func (c *Vault) GetEnvOrDefaultConfig(def interface{}, path string) (map[string]string, error) {
+func (c *Vault) GetEnvOrDefaultConfig(path string, def interface{}) (map[string]string, error) {
 	var err error
 	res := make(map[string]string)
 
