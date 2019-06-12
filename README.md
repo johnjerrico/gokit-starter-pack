@@ -5,7 +5,11 @@ starter pack for creating gokit project
 1. [Event Store](#event_store)  
     * [Publisher](#publisher)
     * [Subscriber](#subscriber)
-
+2. [Vault Client](#vault_client)  
+    * [Get Config](#get_config)
+    * [Write Ecnrypted](#write_encrypted)
+    * [Read Ecnrypted](#read_encrypted)
+    
 <a name="event_store"/>
 
 ## Event Store Lib
@@ -88,3 +92,103 @@ Description :
 |                     | since (click [here](https://golang.org/pkg/time/#ParseDuration) for information) ex:**since:2h** |
 | logger              | logger for logging type from gokit log                                                           |
 | func(msg *stan.Msg) | Handler incoming message                                                                         |
+
+
+
+<a name="vault_client"/>
+
+## Vault Client
+
+<a name="get_config"/>
+
+### Get Configuration
+
+Library for getting configuration.
+This library will get k/v from 2 paths in Vault.
+1. From config/global
+2. From config/{user_defined_path}, existing keys from config/global will be replaced.
+
+#### Example
+
+```
+//Defining configuration struct
+type Config struct {
+	DebugAddress       string
+	NatsAddress        string
+}
+
+//Defining default configuration
+var defaultConfig = &Config{
+	DebugAddress:       ":9080",
+	NatsAddress:        "nats://localhost:4222",
+}
+
+func main() {
+   error err
+
+   //Create Vault connection
+   vaultConn, err := vault.New()
+
+   //Get Configuration from Vault as map[string]string
+   cfg, err := vaultConn.GetEnvOrDefaultConfig("path", "defaultConfig")
+}
+```
+
+Description :
+
+| Param                             | Description                            |
+|-----------------------------------|:---------------------------------------|
+| path <string>                     | specific path in config                |
+| defaultConfig <map[string]string> | default configuration if k/v not found |
+
+
+<a name="write_encrypted"/>
+
+### Write Encrypted
+
+Library to write k/v with encrypted value.
+
+#### Example
+
+```
+//Create Vault connection
+vaultConn, err := vault.New()
+
+//Write k/v
+err := vaultConn.WriteEncrypted("transitkey", "path", "key", "value")
+```
+
+Description :
+
+| Param                             | Description                   |
+|-----------------------------------|:------------------------------|
+| transitkey <string>               | key to encrypt value          |
+| path <string>                     | path in Vault                 |
+| key <string>                      | secret key                    |
+| value <string>                    | secret value                  |
+   
+
+<a name="write_encrypted"/>
+
+### Read Encrypted
+
+Library to read k/v with encrypted value.
+
+#### Example
+
+```
+//Create Vault connection
+vaultConn, err := vault.New()
+
+//Write k/v
+value, err := vaultConn.ReadEncrypted("transitkey", "path", "key")
+```
+
+Description :
+
+| Param                             | Description                   |
+|-----------------------------------|:------------------------------|
+| transitkey <string>               | key to decrypt value          |
+| path <string>                     | path in Vault                 |
+| key <string>                      | secret key                    |
+   
