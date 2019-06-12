@@ -155,7 +155,7 @@ Library to write k/v with encrypted value.
 vaultConn, err := vault.New()
 
 //Write k/v
-err := vaultConn.WriteEncrypted("transitkey", "path", "key", "value")
+encryptedValue, err := vaultConn.WriteEncrypted("transitkey", "path", "key", "value")
 ```
 
 Description :
