@@ -9,6 +9,7 @@ import (
 	"os"
 	"reflect"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/vault/api"
 	rError "github.com/johnjerrico/gokit-starter-pack/pkg/error"
 )
@@ -96,7 +97,7 @@ func (c *Vault) GetEnvOrDefaultConfig(path string, def interface{}) (map[string]
 }
 
 // WriteEncrypted ...
-func (c *Vault) WriteEncrypted(transitkey, path, key, value string) (string, error) {
+func (c *Vault) WriteEncrypted(transitkey, path string, value []byte) (string, error) {
 	var err error
 	var response Response
 
@@ -105,7 +106,7 @@ func (c *Vault) WriteEncrypted(transitkey, path, key, value string) (string, err
 	}
 
 	reqBody, _ := json.Marshal(map[string]string{
-		"plaintext": base64.StdEncoding.EncodeToString([]byte(value)),
+		"plaintext": base64.StdEncoding.EncodeToString(value),
 	})
 
 	uri := fmt.Sprintf("/v1/transit/encrypt/%v", transitkey)
@@ -138,12 +139,15 @@ func (c *Vault) WriteEncrypted(transitkey, path, key, value string) (string, err
 	ciphertext := response.Data["ciphertext"].(string)
 
 	data := map[string]interface{}{
-		key: ciphertext,
+		"value": ciphertext,
 	}
 
-	_, err = c.Logical().Write(path, data)
+	id, _ := uuid.NewUUID()
+
+	_, err = c.Logical().Write(fmt.Sprintf(`%v/%v`, path, id.String()), data)
 
 	if err != nil {
+		fmt.Println("ERR", path, data)
 		return "", err
 	}
 
@@ -151,22 +155,26 @@ func (c *Vault) WriteEncrypted(transitkey, path, key, value string) (string, err
 }
 
 // ReadEncrypted ...
-func (c *Vault) ReadEncrypted(transitkey, path, key string) (string, error) {
+func (c *Vault) ReadEncrypted(transitkey, path string) ([]byte, error) {
 	var err error
 	var resp Response
 
 	if c == nil {
-		return "", rError.New(err, rError.Enum.INTERNALSERVERERROR, "client_has_not_been_initiated")
+		return nil, rError.New(err, rError.Enum.INTERNALSERVERERROR, "client_has_not_been_initiated")
 	}
 
 	data, err := c.Logical().Read(path)
 
 	if err != nil {
-		return "", err
+		return nil, err
+	}
+
+	if data == nil {
+		return nil, err
 	}
 
 	reqBody, _ := json.Marshal(map[string]string{
-		"ciphertext": data.Data[key].(string),
+		"ciphertext": data.Data["value"].(string),
 	})
 
 	uri := fmt.Sprintf("/v1/transit/decrypt/%v", transitkey)
@@ -177,7 +185,7 @@ func (c *Vault) ReadEncrypted(transitkey, path, key string) (string, error) {
 	res, err := c.RawRequest(req)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	defer res.Body.Close()
@@ -185,24 +193,22 @@ func (c *Vault) ReadEncrypted(transitkey, path, key string) (string, error) {
 	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Pass a pointer of type Response and Go'll do the rest
 	err = json.Unmarshal(body, &resp)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Get Plaintext from Response
 	plaintextByte, err := base64.StdEncoding.DecodeString(resp.Data["plaintext"].(string))
 
-	plaintext := string(plaintextByte)
-
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return plaintext, err
+	return plaintextByte, err
 }

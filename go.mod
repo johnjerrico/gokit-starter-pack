@@ -10,6 +10,7 @@ require (
 	github.com/golang/mock v1.3.1 // indirect
 	github.com/google/btree v1.0.0 // indirect
 	github.com/google/pprof v0.0.0-20190515194954-54271f7e092f // indirect
+	github.com/google/uuid v1.1.1
 	github.com/hashicorp/go-hclog v0.9.2 // indirect
 	github.com/hashicorp/go-immutable-radix v1.1.0 // indirect
 	github.com/hashicorp/go-retryablehttp v0.5.4 // indirect
