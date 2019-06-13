@@ -151,7 +151,7 @@ func (c *Vault) WriteEncrypted(transitkey, path string, value []byte) (string, e
 		return "", err
 	}
 
-	return ciphertext, nil
+	return id.String(), nil
 }
 
 // ReadEncrypted ...
