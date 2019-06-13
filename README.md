@@ -155,7 +155,7 @@ Library to write k/v with encrypted value.
 vaultConn, err := vault.New()
 
 //Write k/v
-encryptedValue, err := vaultConn.WriteEncrypted("transitkey", "path", "key", "value")
+encryptedValue, err := vaultConn.WriteEncrypted("transitkey", "path", "value")
 ```
 
 Description :
@@ -163,9 +163,8 @@ Description :
 | Param                             | Description                   |
 |-----------------------------------|:------------------------------|
 | transitkey <string>               | key to encrypt value          |
-| path <string>                     | path in Vault                 |
-| key <string>                      | secret key                    |
-| value <string>                    | secret value                  |
+| path <string>                     | secret path in Vault          |
+| value <[]byte>                    | secret value                  |
    
 
 <a name="write_encrypted"/>
@@ -181,7 +180,7 @@ Library to read k/v with encrypted value.
 vaultConn, err := vault.New()
 
 //Write k/v
-value, err := vaultConn.ReadEncrypted("transitkey", "path", "key")
+value, err := vaultConn.ReadEncrypted("transitkey", "path")
 ```
 
 Description :
@@ -189,6 +188,5 @@ Description :
 | Param                             | Description                   |
 |-----------------------------------|:------------------------------|
 | transitkey <string>               | key to decrypt value          |
-| path <string>                     | path in Vault                 |
-| key <string>                      | secret key                    |
+| path <string>                     | secret path + key in Vault    |
    
