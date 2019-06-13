@@ -147,7 +147,6 @@ func (c *Vault) WriteEncrypted(transitkey, path string, value []byte) (string, e
 	_, err = c.Logical().Write(fmt.Sprintf(`%v/%v`, path, id.String()), data)
 
 	if err != nil {
-		fmt.Println("ERR", path, data)
 		return "", err
 	}
 
