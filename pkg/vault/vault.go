@@ -32,7 +32,7 @@ func getEnvOrDefault(env string, defaultVal string) string {
 	return e
 }
 
-// New create new Vault connection
+// New creating new Vault connection
 func New() (*Vault, error) {
 	c, err := api.NewClient(nil)
 
@@ -74,9 +74,11 @@ func (c *Vault) GetEnvOrDefaultConfig(path string, def interface{}) (map[string]
 		return nil, err
 	}
 
-	for k := range res {
-		if kv.Data[k] != nil {
-			res[k] = kv.Data[k].(string)
+	if kv != nil {
+		for k := range res {
+			if kv.Data[k] != nil {
+				res[k] = kv.Data[k].(string)
+			}
 		}
 	}
 
@@ -87,9 +89,11 @@ func (c *Vault) GetEnvOrDefaultConfig(path string, def interface{}) (map[string]
 		return nil, err
 	}
 
-	for k := range res {
-		if kv.Data[k] != nil {
-			res[k] = kv.Data[k].(string)
+	if kv != nil {
+		for k := range res {
+			if kv.Data[k] != nil {
+				res[k] = kv.Data[k].(string)
+			}
 		}
 	}
 
@@ -97,7 +101,7 @@ func (c *Vault) GetEnvOrDefaultConfig(path string, def interface{}) (map[string]
 }
 
 // WriteEncrypted write k/v with encrypted value in vault
-func (c *Vault) WriteEncrypted(transitkey, path string, value []byte) (string, error) {
+func (c *Vault) WriteEncrypted(transitkey, path string, value []byte, key *string) (string, error) {
 	var err error
 	var response Response
 
@@ -105,7 +109,6 @@ func (c *Vault) WriteEncrypted(transitkey, path string, value []byte) (string, e
 		return "", rError.New(err, rError.Enum.INTERNALSERVERERROR, "client_has_not_been_initiated")
 	}
 
-	// Create request for vault encryption
 	reqBody, _ := json.Marshal(map[string]string{
 		"plaintext": base64.StdEncoding.EncodeToString(value),
 	})
@@ -129,33 +132,36 @@ func (c *Vault) WriteEncrypted(transitkey, path string, value []byte) (string, e
 		return "", err
 	}
 
-	// Pass a pointer of type Response
+	// Pass a pointer of type Response and Go'll do the rest
 	err = json.Unmarshal(body, &response)
 
 	if err != nil {
 		return "", err
 	}
 
-	// Get Encrypted value from Response
+	// Get Ciphertext from Response
 	ciphertext := response.Data["ciphertext"].(string)
 
 	data := map[string]interface{}{
 		"value": ciphertext,
 	}
 
-	// Create random-UUID key and write k/v to Vault
-	id, _ := uuid.NewUUID()
+	if key == nil {
+		id, _ := uuid.NewUUID()
+		newKey := id.String()
+		key = &newKey
+	}
 
-	_, err = c.Logical().Write(fmt.Sprintf(`%v/%v`, path, id.String()), data)
+	_, err = c.Logical().Write(fmt.Sprintf(`%v/%v`, path, *key), data)
 
 	if err != nil {
 		return "", err
 	}
 
-	return id.String(), nil
+	return *key, nil
 }
 
-// ReadEncrypted read k/v with encrypted value in Vault
+// ReadEncrypted ...
 func (c *Vault) ReadEncrypted(transitkey, path string) ([]byte, error) {
 	var err error
 	var resp Response
@@ -164,7 +170,6 @@ func (c *Vault) ReadEncrypted(transitkey, path string) ([]byte, error) {
 		return nil, rError.New(err, rError.Enum.INTERNALSERVERERROR, "client_has_not_been_initiated")
 	}
 
-	// Read k/v from Vault
 	data, err := c.Logical().Read(path)
 
 	if err != nil {
@@ -175,7 +180,6 @@ func (c *Vault) ReadEncrypted(transitkey, path string) ([]byte, error) {
 		return nil, err
 	}
 
-	// Decrypt value with given key
 	reqBody, _ := json.Marshal(map[string]string{
 		"ciphertext": data.Data["value"].(string),
 	})
@@ -199,7 +203,7 @@ func (c *Vault) ReadEncrypted(transitkey, path string) ([]byte, error) {
 		return nil, err
 	}
 
-	// Pass a pointer of type Response
+	// Pass a pointer of type Response and Go'll do the rest
 	err = json.Unmarshal(body, &resp)
 
 	if err != nil {
