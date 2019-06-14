@@ -101,7 +101,7 @@ func (c *Vault) GetEnvOrDefaultConfig(path string, def interface{}) (map[string]
 }
 
 // WriteEncrypted write k/v with encrypted value in vault
-func (c *Vault) WriteEncrypted(transitkey, path string, value []byte, key *string) (string, error) {
+func (c *Vault) WriteEncrypted(transitkey, path string, value []byte) (string, error) {
 	var err error
 	var response Response
 
@@ -146,19 +146,15 @@ func (c *Vault) WriteEncrypted(transitkey, path string, value []byte, key *strin
 		"value": ciphertext,
 	}
 
-	if key == nil {
-		id, _ := uuid.NewUUID()
-		newKey := id.String()
-		key = &newKey
-	}
+	id, _ := uuid.NewUUID()
 
-	_, err = c.Logical().Write(fmt.Sprintf(`%v/%v`, path, *key), data)
+	_, err = c.Logical().Write(fmt.Sprintf(`%v/%v`, path, id.String()), data)
 
 	if err != nil {
 		return "", err
 	}
 
-	return *key, nil
+	return id.String(), nil
 }
 
 // ReadEncrypted ...
