@@ -8,9 +8,7 @@ import (
 //IEvent ...
 type IEvent interface {
 	Store(
-		domain string,
-		model string,
-		eventType string,
+		domain, model, eventType, subject, eventSource string,
 		f endpoint.Endpoint,
 		metaBuilder MetaBuilder,
 	) endpoint.Endpoint

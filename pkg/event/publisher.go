@@ -29,7 +29,7 @@ func NewPublisher(conn stan.Conn, logger log.Logger) *Publisher {
 }
 
 //Store for publish event (begin and commit) to nats and data wrapping as a middleware
-func (p *Publisher) Store(domain, model, eventType, subject string, f endpoint.Endpoint, metabuilder MetaBuilder) endpoint.Endpoint {
+func (p *Publisher) Store(domain, model, eventType, subject, eventSource string, f endpoint.Endpoint, metabuilder MetaBuilder) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, errResponse error) {
 		var requestData map[string]interface{}
 		var requestBundle = make(map[string]interface{})
@@ -45,6 +45,7 @@ func (p *Publisher) Store(domain, model, eventType, subject string, f endpoint.E
 		requestBundle["model"] = model
 		requestBundle["status"] = "begin"
 		requestBundle["event_type"] = eventType
+		requestBundle["event_source"] = eventSource
 		requestBundle["data"] = requestData
 		dataBundle, err := json.Marshal(requestBundle)
 		if err != nil {
@@ -72,6 +73,7 @@ func (p *Publisher) Store(domain, model, eventType, subject string, f endpoint.E
 				resultBundle["model"] = model
 				resultBundle["status"] = "commit"
 				resultBundle["event_type"] = eventType
+				requestBundle["event_source"] = eventSource
 				resultBundle["data"] = resultData
 
 				dataBundle, err := json.Marshal(resultBundle)
@@ -88,6 +90,7 @@ func (p *Publisher) Store(domain, model, eventType, subject string, f endpoint.E
 				resultBundle["model"] = model
 				resultBundle["status"] = "error"
 				resultBundle["event_type"] = eventType
+				requestBundle["event_source"] = eventSource
 				resultBundle["data"] = errResponse.Error()
 
 				dataBundle, err := json.Marshal(resultBundle)
