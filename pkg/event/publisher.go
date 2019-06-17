@@ -10,6 +10,9 @@ import (
 	stan "github.com/nats-io/stan.go"
 )
 
+//MetaBuilder wraping and building meta data before send it to nats
+type MetaBuilder func(data interface{}) interface{}
+
 // Publisher wraps a URL and provides a method that implements endpoint.Endpoint.
 type Publisher struct {
 	publisher stan.Conn
@@ -26,7 +29,7 @@ func NewPublisher(conn stan.Conn, logger log.Logger) *Publisher {
 }
 
 //Store for publish event (begin and commit) to nats and data wrapping as a middleware
-func (p *Publisher) Store(domain, model, eventType, subject string, f endpoint.Endpoint) endpoint.Endpoint {
+func (p *Publisher) Store(domain, model, eventType, subject string, f endpoint.Endpoint, metabuilder MetaBuilder) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, errResponse error) {
 		var requestData map[string]interface{}
 		var requestBundle = make(map[string]interface{})
@@ -55,7 +58,8 @@ func (p *Publisher) Store(domain, model, eventType, subject string, f endpoint.E
 			if errResponse == nil {
 				var resultData map[string]interface{}
 				var resultBundle = make(map[string]interface{})
-				dataResult, err := json.Marshal(response)
+				buildData := metabuilder(response)
+				dataResult, err := json.Marshal(buildData)
 				if err != nil {
 					p.logger.Log("error_publish_commit", err)
 				}

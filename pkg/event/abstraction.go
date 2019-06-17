@@ -12,6 +12,7 @@ type IEvent interface {
 		model string,
 		eventType string,
 		f endpoint.Endpoint,
+		metaBuilder MetaBuilder,
 	) endpoint.Endpoint
 	Subscribe() *stan.Subscription
 }
