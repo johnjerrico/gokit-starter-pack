@@ -27,13 +27,17 @@ Library for publishing event to nats (begin and commit) as a middleware in trans
 eventPublisher := event.NewPublisher("nats_connection", "logger")
 
 //Implementation in transport or as endpoint Go-Kit
-eventPublisher.Store("domain", "model", "eventtype", "topic/subject",
+eventPublisher.Store("domain", "model", "eventtype", "topic/subject", "event_source",
     func(ctx context.Context, request interface{}) (response interface{}, err error) {
         result, err := service.Create(reqData.Name, reqData.Code)
         if err != nil {
             return nil, err
         }
         return result, nil
+    },
+    func(metaBuilder interface{}) interface{} {
+        //filter data or build meta data in here before data published into nats
+        return metaBuilder
     },
 )
 ```
@@ -49,13 +53,15 @@ Description :
 
 **.Store**
 
-| Param         | Description                            |
-|---------------|:---------------------------------------|
-| domain        | Your domain ex: account, authorization |
-| model         | Your model from your domain            |
-| eventtype     | Event Type ex: create, update          |
-| topic/subject | Topic/Subject for nats                 |
-| func          | Enpoint gokit                          |
+| Param         | Description                               |
+|---------------|:------------------------------------------|
+| domain        | Your domain ex: account, authorization    |
+| model         | Your model from your domain               |
+| eventtype     | Event Type ex: create, update             |
+| topic/subject | Topic/Subject for nats                    |
+| event_source  | Event Source befor this event             |
+| func          | Enpoint gokit                             |
+| MetaBuilder   | func(metaBuilder interface{}) interface{} |
 
 <a name="subscriber"/>
 
